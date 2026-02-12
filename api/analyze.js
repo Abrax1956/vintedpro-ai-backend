@@ -1,13 +1,18 @@
 import OpenAI from "openai";
 
+export const config = {
+  api: {
+    bodyParser: true
+  }
+};
+
 export default async function handler(req, res) {
 
-  // 🔥 CORS HEADERS
+  // 🔥 CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // 🔥 Gestione preflight request
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -24,29 +29,29 @@ export default async function handler(req, res) {
 
     const listing = req.body;
 
-    const prompt = `
-Sei un esperto di vendita su Vinted.
-
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Sei un esperto di vendita su Vinted."
+        },
+        {
+          role: "user",
+          content: `
 Analizza questo prodotto:
 
 ${JSON.stringify(listing)}
 
-Genera:
-- title ottimizzato
-- description professionale
-- suggestedPrice realistico
-
-Rispondi SOLO in JSON con:
+Genera risposta JSON con:
 {
   "title": "...",
   "description": "...",
   "suggestedPrice": 0
 }
-`;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+`
+        }
+      ],
       temperature: 0.7
     });
 
@@ -57,7 +62,7 @@ Rispondi SOLO in JSON con:
     return res.status(200).json(parsed);
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "AI Error" });
+    console.error("AI ERROR:", error);
+    return res.status(500).json({ error: "AI error" });
   }
 }
