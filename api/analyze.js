@@ -1,17 +1,6 @@
 import OpenAI from "openai";
 
-export const config = {
-  api: {
-    bodyParser: true
-  }
-};
-
 export default async function handler(req, res) {
-
-  // 🔥 CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -43,7 +32,7 @@ Analizza questo prodotto:
 
 ${JSON.stringify(listing)}
 
-Genera risposta JSON con:
+Rispondi SOLO con JSON valido:
 {
   "title": "...",
   "description": "...",
@@ -55,14 +44,13 @@ Genera risposta JSON con:
       temperature: 0.7
     });
 
-    const aiText = completion.choices[0].message.content;
-
-    const parsed = JSON.parse(aiText);
+    const text = completion.choices[0].message.content;
+    const parsed = JSON.parse(text);
 
     return res.status(200).json(parsed);
 
-  } catch (error) {
-    console.error("AI ERROR:", error);
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({ error: "AI error" });
   }
 }
